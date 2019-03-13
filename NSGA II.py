@@ -107,6 +107,7 @@ max_gen = 921
 min_x=-55
 max_x=55
 solution=[min_x+(max_x-min_x)*random.random() for i in range(0,pop_size)]
+print(solution)
 gen_no=0
 while(gen_no<max_gen):
     function1_values = [function1(solution[i])for i in range(0,pop_size)]
