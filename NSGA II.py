@@ -9,16 +9,19 @@ import random
 import matplotlib.pyplot as plt
 
 #First function to optimize
+#目标函数1
 def function1(x):
     value = -x**2
     return value
 
 #Second function to optimize
+#目标函数2
 def function2(x):
     value = -(x-2)**2
     return value
 
 #Function to find index of list
+#确定a在list中下标（todo:折半查找优化）
 def index_of(a,list):
     for i in range(0,len(list)):
         if list[i] == a:
@@ -26,6 +29,7 @@ def index_of(a,list):
     return -1
 
 #Function to sort by values
+#？？？？？？？？？
 def sort_by_values(list1, values):
     sorted_list = []
     while(len(sorted_list)!=len(list1)):
@@ -35,6 +39,7 @@ def sort_by_values(list1, values):
     return sorted_list
 
 #Function to carry out NSGA-II's fast non dominated sort
+#快速非支配排序
 def fast_non_dominated_sort(values1, values2):
     S=[[] for i in range(0,len(values1))]
     front = [[]]
@@ -107,7 +112,6 @@ max_gen = 921
 min_x=-55
 max_x=55
 solution=[min_x+(max_x-min_x)*random.random() for i in range(0,pop_size)]
-print(solution)
 gen_no=0
 while(gen_no<max_gen):
     function1_values = [function1(solution[i])for i in range(0,pop_size)]
@@ -130,7 +134,7 @@ while(gen_no<max_gen):
     function2_values2 = [function2(solution2[i])for i in range(0,2*pop_size)]
     non_dominated_sorted_solution2 = fast_non_dominated_sort(function1_values2[:],function2_values2[:])
     crowding_distance_values2=[]
-    for i in range(0,len(non_dominated_sorted_solution2)):
+    for i in range(0,len(non_dominated_sorted_solution2)):#计算父代和子代的拥挤度
         crowding_distance_values2.append(crowding_distance(function1_values2[:],function2_values2[:],non_dominated_sorted_solution2[i][:]))
     new_solution= []
     for i in range(0,len(non_dominated_sorted_solution2)):
