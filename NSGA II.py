@@ -366,6 +366,7 @@ while (gen_no < max_gen):
     for i in range(0, len(non_dominated_sorted_solution2)):  # 计算父代和子代的拥挤度
         crowding_distance_values2.append(
             crowding_distance(function1_values2[:], function2_values2[:], function3_values2[:],non_dominated_sorted_solution2[i][:]))
+    print('4len(chromosomes)', len(chromosomes))
     # 重新选取新的种群
     new_solution = []
     for i in range(0, len(non_dominated_sorted_solution2)):
@@ -382,10 +383,12 @@ while (gen_no < max_gen):
                 break
         if (len(new_solution) == pop_size):
             print('2len(new_solution)', len(new_solution))
-            chromosomes = [chromosomes2[i] for i in new_solution]
+            #chromosomes = [chromosomes2[i] for i in new_solution]
             break
         print('len(new_solution)',len(new_solution))
+        print('5len(chromosomes)', len(chromosomes))
         chromosomes = [chromosomes2[i] for i in new_solution]
+        print('6len(chromosomes)', len(chromosomes))
     gen_no = gen_no + 1
 
 # Lets plot the final front now
