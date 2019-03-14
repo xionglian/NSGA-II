@@ -29,7 +29,6 @@ def index_of(a,list):
     return -1
 
 #Function to sort by values
-#？？？？？？？？？
 def sort_by_values(list1, values):
     sorted_list = []
     while(len(sorted_list)!=len(list1)):
@@ -114,28 +113,34 @@ max_x=55
 solution=[min_x+(max_x-min_x)*random.random() for i in range(0,pop_size)]
 gen_no=0
 while(gen_no<max_gen):
+    #计算目标函数值
     function1_values = [function1(solution[i])for i in range(0,pop_size)]
     function2_values = [function2(solution[i])for i in range(0,pop_size)]
+    #快速非支配排序，生成排序列表（列表每一项是相同Rank个体组成的列表）
     non_dominated_sorted_solution = fast_non_dominated_sort(function1_values[:],function2_values[:])
     print("The best front for Generation number ",gen_no, " is")
     for valuez in non_dominated_sorted_solution[0]:
         print(round(solution[valuez],3),end=" ")
     print("\n")
+    #对每一层计算拥挤度
     crowding_distance_values=[]
-    for i in range(0,len(non_dominated_sorted_solution)):
+    for i in range(0,len(non_dominated_sorted_solution)):#
         crowding_distance_values.append(crowding_distance(function1_values[:],function2_values[:],non_dominated_sorted_solution[i][:]))
     solution2 = solution[:]
-    #Generating offsprings
+    #随机生成后代（todo:优化选择机制）
     while(len(solution2)!=2*pop_size):
         a1 = random.randint(0,pop_size-1)
         b1 = random.randint(0,pop_size-1)
         solution2.append(crossover(solution[a1],solution[b1]))
+    #对两代种群计算目标值
     function1_values2 = [function1(solution2[i])for i in range(0,2*pop_size)]
     function2_values2 = [function2(solution2[i])for i in range(0,2*pop_size)]
+    #根据目标值，求得非支配层次列表
     non_dominated_sorted_solution2 = fast_non_dominated_sort(function1_values2[:],function2_values2[:])
     crowding_distance_values2=[]
     for i in range(0,len(non_dominated_sorted_solution2)):#计算父代和子代的拥挤度
         crowding_distance_values2.append(crowding_distance(function1_values2[:],function2_values2[:],non_dominated_sorted_solution2[i][:]))
+    #重新选取新的种群
     new_solution= []
     for i in range(0,len(non_dominated_sorted_solution2)):
         non_dominated_sorted_solution2_1 = [index_of(non_dominated_sorted_solution2[i][j],non_dominated_sorted_solution2[i] ) for j in range(0,len(non_dominated_sorted_solution2[i]))]
