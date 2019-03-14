@@ -137,19 +137,20 @@ duration = [40, 50, 80]
 
 chromosomes = initChromosome(cycle,1000)
 taskQueue, delayQueue = chromosome2delayQueueAndTaskQueue(chromosomes[0])
-# # 3 计算延迟损失
-# delayLoss = delayQueue2delayLoss(delayQueue)
-# # 3 计算公平性
-# fair = function_fair(delayQueue)
-#
-# # 4 计算能耗
-# consu = function_energy_consumption(taskQueue, duration, delayQueue)
 
-# print(delayLoss)
-# print(fair)
-# print(consu)
 #taskQueue:  [1, 2, 1, 2, 3, 1, 2, 3]
 #delayQueue:  [[40, 194], [89, 76], [0]]
-taskQueue, delayQueue = chromosome2delayQueueAndTaskQueue([1, 1, 3, 2, 3, 2, 2, 1, 74, 54, 271, 155, 134, 66, 140, 179] )
+taskQueue, delayQueue = chromosome2delayQueueAndTaskQueue([2, 2, 2, 1, 3, 1, 1, 3, 35, 24, 35, 9, 24, 14, 28, 22] )
 print(taskQueue)
 print(delayQueue)
+# 3 计算延迟损失
+delayLoss = delayQueue2delayLoss(delayQueue)
+# 3 计算公平性
+fair = function_fair(delayQueue)
+
+# 4 计算能耗
+consu = function_energy_consumption(taskQueue, duration, delayQueue)
+
+print(delayLoss)
+print(fair)
+print(consu)

@@ -7,6 +7,8 @@
 import math
 import random
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+import numpy as np
 
 
 # 求a与b最小公倍数
@@ -90,7 +92,7 @@ def chromosome2delayQueueAndTaskQueue(chromosome):
         currentTime += intervalQueue[i]
         taskStartTime[taskType - 1].append(currentTime)
         currentTime += duration[taskType - 1]
-    print(chromosome,'的taskStartTime',taskStartTime)
+    #print(chromosome,'的taskStartTime',taskStartTime)
     # 2 calculate delay loss
     # 2.1 calculate Delay between  two scheduling for each task
     #    (delay = actual interval - expect interval)
@@ -185,13 +187,13 @@ def fast_non_dominated_sort(values1, values2, values3):
             # if (values1[p] > values1[q] and values2[p] > values2[q]) or (
             #         values1[p] >= values1[q] and values2[p] > values2[q]) or (
             #         values1[p] > values1[q] and values2[p] >= values2[q]):
-            if (values1[p] > values1[q] and values2[p] > values2[q] and values3[p] > values3[q] ):
+            if (values1[p] < values1[q] and values2[p] < values2[q] and values3[p] > values3[q] ):
                 if q not in S[p]:
                     S[p].append(q)
             # elif (values1[q] > values1[p] and values2[q] > values2[p]) or (
             #         values1[q] >= values1[p] and values2[q] > values2[p]) or (
             #         values1[q] > values1[p] and values2[q] >= values2[p]):
-            elif (values1[q] > values1[p] and values2[q] > values2[p] and values3[q] > values3[p]):
+            elif (values1[q] < values1[p] and values2[q] < values2[p] and values3[q] > values3[p]):
                 n[p] = n[p] + 1
         if n[p] == 0:
             rank[p] = 0
@@ -245,34 +247,34 @@ def crowding_distance(values1, values2,values3, front):
 
 # Function to carry out the crossover
 def crossover(a, b):
-    print('开始交叉a=',a,'b=',b)
+    #print('开始交叉a=',a,'b=',b)
     r = random.randint(0,len(a)/2)
-    print('交叉r值',r)
+    #print('交叉r值',r)
     result = []
     copy_b = b.copy()[:int(len(b)/2)]
 
     for i in range(r):
         result.append(a[i])
         copy_b.remove(a[i])
-    print('去掉a中交叉用到的基金，b为',copy_b)
+    #print('去掉a中交叉用到的基金，b为',copy_b)
     for i in range(r,int(len(a)/2)):
         result.append(copy_b[i-r])
     for i in range(int(len(a)/2),int(len(a)/2)+r):
         result.append(a[i])
     for i in range(int(len(a)/2)+r,len(a)):
         result.append(b[i])
-    print('交叉结果',result)
+    #print('交叉结果',result)
     return mutation(result)
 
 # Function to carry out the mutation operator
 def mutation(solution):
-    print(solution,'开始变异')
+    #print(solution,'开始变异')
     mutation_prob = random.random()
     if mutation_prob < 0.8:
         #任务队列突变
         mutation_position_1_1 = random.randint(0,len(solution)/2-1)
         mutation_position_1_2 = random.randint(0, len(solution) / 2-1 )
-        print('交换点',mutation_position_1_1,mutation_position_1_2)
+        #print('交换点',mutation_position_1_1,mutation_position_1_2)
         temp = solution[mutation_position_1_1]
         solution[mutation_position_1_1] = solution[mutation_position_1_2]
         solution[mutation_position_1_2] = temp
@@ -286,7 +288,7 @@ def mutation(solution):
         mutation_value1 = random.randint(1,len(cycle))
         mutation_value2 = random.randint(0,math.fabs(maxTolerateDelays[solution[mutation_position_2]-1]-solution[mutation_position_2]))
         solution[int(len(solution)/2+mutation_position_2)] = mutation_value2
-    print('变异结果',solution)
+    #print('变异结果',solution)
     return solution
 
 
@@ -299,8 +301,7 @@ cycle = [200, 200, 300]
 duration = [40, 50, 80]
 
 chromosomes = initChromosome(cycle, pop_size)
-print('1len(chromosomes)',len(chromosomes))
-print('种群为',chromosomes)
+print('初始化种群为',chromosomes)
 # Initialization
 min_x = -55
 max_x = 55
@@ -311,10 +312,10 @@ while (gen_no < max_gen):
     function2_values = []
     function3_values = []
     for chromosome in chromosomes:
-        print(chromosome)
+        #print(chromosome)
         taskQueue, delayQueue = chromosome2delayQueueAndTaskQueue(chromosome)
-        print('taskQueue: ',taskQueue)
-        print('delayQueue: ',delayQueue)
+        #print('taskQueue: ',taskQueue)
+        #print('delayQueue: ',delayQueue)
         # 1 计算延迟损失
         function1_values.append(delayQueue2delayLoss(delayQueue))
         # 2 计算公平性
@@ -324,25 +325,23 @@ while (gen_no < max_gen):
     # 快速非支配排序，生成排序列表（列表每一项是相同Rank个体组成的列表）
     non_dominated_sorted_solution = fast_non_dominated_sort(function1_values[:], function2_values[:],
                                                             function3_values[:])
-    print(non_dominated_sorted_solution)
+    #print(non_dominated_sorted_solution)
     print("The best front for Generation number ", gen_no, " is")
     for valuez in non_dominated_sorted_solution[0]:
         print((chromosomes[valuez]), end=" ")
     print("\n")
-    print('2len(chromosomes)', len(chromosomes))
     # 对每一层计算拥挤度
     crowding_distance_values = []
     for i in range(0, len(non_dominated_sorted_solution)):  #
         crowding_distance_values.append(
             crowding_distance(function1_values[:], function2_values[:],function3_values[:], non_dominated_sorted_solution[i][:]))
-    print('2.5len(chromosomes)', len(chromosomes))
+
     chromosomes2 = chromosomes[:]
     # 随机生成后代（todo:优化选择机制）
     while (len(chromosomes2) != 2 * pop_size):
         a1 = random.randint(0, pop_size - 1)
         b1 = random.randint(0, pop_size - 1)
-        print('3len(chromosomes)', len(chromosomes))
-        print(len(chromosomes),a1,b1)
+        #print(len(chromosomes),a1,b1)
         chromosomes2.append(crossover(chromosomes[a1], chromosomes[b1]))
     # 对两代种群计算目标值
     function1_values2 = []
@@ -350,9 +349,9 @@ while (gen_no < max_gen):
     function3_values2 = []
     for chromosome in chromosomes2:
         taskQueue, delayQueue = chromosome2delayQueueAndTaskQueue(chromosome)
-        print('染色体',chromosome)
-        print('任务队列',taskQueue)
-        print('延迟队列', delayQueue)
+        #print('染色体',chromosome)
+        #print('任务队列',taskQueue)
+        #print('延迟队列', delayQueue)
         # 1 计算延迟损失
         function1_values2.append(delayQueue2delayLoss(delayQueue))
         # 2 计算公平性
@@ -366,7 +365,6 @@ while (gen_no < max_gen):
     for i in range(0, len(non_dominated_sorted_solution2)):  # 计算父代和子代的拥挤度
         crowding_distance_values2.append(
             crowding_distance(function1_values2[:], function2_values2[:], function3_values2[:],non_dominated_sorted_solution2[i][:]))
-    print('4len(chromosomes)', len(chromosomes))
     # 重新选取新的种群
     new_solution = []
     for i in range(0, len(non_dominated_sorted_solution2)):
@@ -382,19 +380,25 @@ while (gen_no < max_gen):
             if (len(new_solution) == pop_size):
                 break
         if (len(new_solution) == pop_size):
-            print('2len(new_solution)', len(new_solution))
-            #chromosomes = [chromosomes2[i] for i in new_solution]
             break
-        print('len(new_solution)',len(new_solution))
-        print('5len(chromosomes)', len(chromosomes))
-        chromosomes = [chromosomes2[i] for i in new_solution]
-        print('6len(chromosomes)', len(chromosomes))
+
+    chromosomes = [chromosomes2[i] for i in new_solution]
     gen_no = gen_no + 1
 
 # Lets plot the final front now
-function1 = [i * -1 for i in function1_values]
-function2 = [j * -1 for j in function2_values]
-plt.xlabel('Function 1', fontsize=15)
-plt.ylabel('Function 2', fontsize=15)
-plt.scatter(function1, function2)
+function1 = [i  for i in function1_values]
+function2 = [j for j in function2_values]
+function3 = [h for h in function3_values]
+print(function1)
+print(function2)
+print(function3)
+# plt.xlabel('Function 1', fontsize=15)
+# plt.ylabel('Function 2', fontsize=15)
+# plt.scatter(function1, function2)
+# plt.show()
+#定义坐标轴
+fig=plt.figure()
+ax1 = Axes3D(fig)
+ax1.scatter3D(function1,function2,function3, cmap='Blues')  #绘制散点图
+#ax1.plot3D(x,y,z,'gray')    #绘制空间曲线
 plt.show()
