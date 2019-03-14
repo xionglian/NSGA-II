@@ -155,8 +155,13 @@ def index_of(a, list):
     return -1
 
 
-# Function to sort by values
 def sort_by_values(list1, values):
+    """" 
+      根据某一个目标函数，对同一等级个体排序
+    :param list1 非支配排序后的同一等级的个体下标列表
+    :param values 某一个目标函数的值
+    :return  排序后的下标列表
+    """
     sorted_list = []
     while (len(sorted_list) != len(list1)):
         if index_of(min(values), values) in list1:
@@ -211,16 +216,30 @@ def fast_non_dominated_sort(values1, values2, values3):
 
 
 # Function to calculate crowding distance
-def crowding_distance(values1, values2, front):
+def crowding_distance(values1, values2,values3, front):
+    """
+    根据多目标，获得某一层非支配排序的距离
+    :param values1: 目标函数1的值
+    :param values2: 目标函数2的值
+    :param values3: 目标函数3的值
+    :param front:  非支配排序后的某一层个体列表
+    :return: 该层个体距列表
+    """
     distance = [0 for i in range(0, len(front))]
     sorted1 = sort_by_values(front, values1[:])
     sorted2 = sort_by_values(front, values2[:])
+    sorted3 = sort_by_values(front, values3[:])
     distance[0] = 4444444444444444
     distance[len(front) - 1] = 4444444444444444
     for k in range(1, len(front) - 1):
-        distance[k] = distance[k] + (values1[sorted1[k + 1]] - values2[sorted1[k - 1]]) / (max(values1) - min(values1))
+        if(max(values1) - min(values1) != 0):
+            distance[k] = distance[k] + (values1[sorted1[k + 1]] - values2[sorted1[k - 1]]) / (max(values1) - min(values1))
     for k in range(1, len(front) - 1):
-        distance[k] = distance[k] + (values1[sorted2[k + 1]] - values2[sorted2[k - 1]]) / (max(values2) - min(values2))
+        if (max(values2) - min(values2) != 0):
+            distance[k] = distance[k] + (values1[sorted2[k + 1]] - values2[sorted2[k - 1]]) / (max(values2) - min(values2))
+    for k in range(1, len(front) - 1):
+        if (max(values3) - min(values3) != 0):
+            distance[k] = distance[k] + (values1[sorted3[k + 1]] - values2[sorted3[k - 1]]) / (max(values3) - min(values3))
     return distance
 
 
@@ -315,7 +334,7 @@ while (gen_no < max_gen):
     crowding_distance_values = []
     for i in range(0, len(non_dominated_sorted_solution)):  #
         crowding_distance_values.append(
-            crowding_distance(function1_values[:], function2_values[:], non_dominated_sorted_solution[i][:]))
+            crowding_distance(function1_values[:], function2_values[:],function3_values[:], non_dominated_sorted_solution[i][:]))
     print('2.5len(chromosomes)', len(chromosomes))
     chromosomes2 = chromosomes[:]
     # 随机生成后代（todo:优化选择机制）
@@ -346,15 +365,15 @@ while (gen_no < max_gen):
     crowding_distance_values2 = []
     for i in range(0, len(non_dominated_sorted_solution2)):  # 计算父代和子代的拥挤度
         crowding_distance_values2.append(
-            crowding_distance(function1_values2[:], function2_values2[:], non_dominated_sorted_solution2[i][:]))
+            crowding_distance(function1_values2[:], function2_values2[:], function3_values2[:],non_dominated_sorted_solution2[i][:]))
     # 重新选取新的种群
     new_solution = []
     for i in range(0, len(non_dominated_sorted_solution2)):
-        non_dominated_sorted_solution2_1 = [
+        non_dominated_sorted_solution2_1 = [#获取第i层的个体下标列表？？觉得没必要 range(0,len(non_dominated_sorted_solution2[i]))
             index_of(non_dominated_sorted_solution2[i][j], non_dominated_sorted_solution2[i]) for j in
             range(0, len(non_dominated_sorted_solution2[i]))]
-        front22 = sort_by_values(non_dominated_sorted_solution2_1[:], crowding_distance_values2[i][:])
-        front = [non_dominated_sorted_solution2[i][front22[j]] for j in
+        front22 = sort_by_values(non_dominated_sorted_solution2_1[:], crowding_distance_values2[i][:])#根据目标函数2对个体排序（结果是个体下标列表）
+        front = [non_dominated_sorted_solution2[i][front22[j]] for j in#根据下标列表获取个体
                  range(0, len(non_dominated_sorted_solution2[i]))]
         front.reverse()
         for value in front:
@@ -362,7 +381,10 @@ while (gen_no < max_gen):
             if (len(new_solution) == pop_size):
                 break
         if (len(new_solution) == pop_size):
+            print('2len(new_solution)', len(new_solution))
+            chromosomes = [chromosomes2[i] for i in new_solution]
             break
+        print('len(new_solution)',len(new_solution))
         chromosomes = [chromosomes2[i] for i in new_solution]
     gen_no = gen_no + 1
 
