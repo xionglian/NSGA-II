@@ -7,6 +7,7 @@
 import math
 import random
 import matplotlib.pyplot as plt
+import time
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 
@@ -64,16 +65,17 @@ def function_fair(delayQueue):
 
 
 # 能耗函数
-def function_energy_consumption(taskQueue, duration, delayQueue):
+def function_energy_consumption(chromosome):
     runTime = 0
     sleepTime = 0
-    for e in delayQueue:
-        for ele in e:
-            sleepTime += ele
-    for i in taskQueue:
+    for i in chromosome[int(len(chromosome) / 2):len(chromosome)]:
+        sleepTime += i
+    for i in chromosome[0:int(len((chromosome)) / 2)]:
         runTime += duration[i - 1]
-    return sleepTime / (sleepTime + runTime)
-
+    total = (3600/(sleepTime+runTime))*(sleepTime*2+runTime*20)
+    #return sleepTime*2+runTime*20
+    #return runTime/(sleepTime+runTime)
+    return total
 
 def chromosome2delayQueueAndTaskQueue(chromosome):
     # 1 根据染色体生成任务开始执行列表
@@ -95,13 +97,17 @@ def chromosome2delayQueueAndTaskQueue(chromosome):
     #print(chromosome,'的taskStartTime',taskStartTime)
     # 2 calculate delay loss
     # 2.1 calculate Delay between  two scheduling for each task
-    #    (delay = actual interval - expect interval)
+    #    (delay = actual interval - expect interval)\
     delayQueue = [[] for i in range(len(cycle))]  # delayQueue:[[0, 0], [0, 0], [70]]
+
     for i in range(len(cycle)):
-        for j in range(len(taskStartTime[i]) - 1):
-            actualInterval = taskStartTime[i][j + 1] - taskStartTime[i][j]
-            delay = 0 if actualInterval - cycle[i] < 0 else actualInterval - cycle[i]
-            delayQueue[i].append(delay)
+        for j in range(len(taskStartTime[i])):
+            if(j == 0):
+                delayQueue[i].append(taskStartTime[i][j])
+            else:
+                actualInterval = taskStartTime[i][j] - taskStartTime[i][j-1]
+                delay = 0 if actualInterval - cycle[i] < 0 else actualInterval - cycle[i]
+                delayQueue[i].append(delay)
     return taskQueue, delayQueue
 
 
@@ -125,7 +131,11 @@ def initChromosome(cycle, size):
     for i in range(size):
         j = 0
         while (j < totalLoopNum):
-            interval = random.randint(0, int(cycle[chromosomes[i][j]-1]))
+            # if(j == 0):
+            #     interval = 0
+            # else:
+            #     interval = random.randint(0, int(cycle[chromosomes[i][j]-1])*0.2)
+            interval = random.randint(0, int(cycle[chromosomes[i][j] - 1]) * 2)
             chromosomes[i].append(interval)
             j += 1
 
@@ -134,18 +144,7 @@ def initChromosome(cycle, size):
 
 #####################################################################################
 
-# First function to optimize
-# 目标函数1
-def function1(x):
-    value = -x ** 2
-    return value
 
-
-# Second function to optimize
-# 目标函数2
-def function2(x):
-    value = -(x - 2) ** 2
-    return value
 
 
 # Function to find index of list
@@ -172,6 +171,7 @@ def sort_by_values(list1, values):
     return sorted_list
 
 
+
 # Function to carry out NSGA-II's fast non dominated sort
 # 快速非支配排序
 def fast_non_dominated_sort(values1, values2, values3):
@@ -187,13 +187,15 @@ def fast_non_dominated_sort(values1, values2, values3):
             # if (values1[p] > values1[q] and values2[p] > values2[q]) or (
             #         values1[p] >= values1[q] and values2[p] > values2[q]) or (
             #         values1[p] > values1[q] and values2[p] >= values2[q]):
-            if (values1[p] < values1[q] and values2[p] < values2[q] and values3[p] > values3[q] ):
+            if (values1[p] <= values1[q] and values2[p] <= values2[q] and values3[p] <= values3[q]
+                and not(values1[p] == values1[q] and values2[p] == values2[q] and values3[p] == values3[q])):
                 if q not in S[p]:
                     S[p].append(q)
             # elif (values1[q] > values1[p] and values2[q] > values2[p]) or (
             #         values1[q] >= values1[p] and values2[q] > values2[p]) or (
             #         values1[q] > values1[p] and values2[q] >= values2[p]):
-            elif (values1[q] < values1[p] and values2[q] < values2[p] and values3[q] > values3[p]):
+            elif (values1[q] <= values1[p] and values2[q] <= values2[p] and values3[q] <= values3[p]
+                and not(values1[q] == values1[p] and values2[q] == values2[p] and values3[q] == values3[p])):
                 n[p] = n[p] + 1
         if n[p] == 0:
             rank[p] = 0
@@ -250,21 +252,36 @@ def crossover(a, b):
     #print('开始交叉a=',a,'b=',b)
     r = random.randint(0,len(a)/2)
     #print('交叉r值',r)
-    result = []
+    results = []
     copy_b = b.copy()[:int(len(b)/2)]
-
+    copy_a = a.copy()[:int(len(a) / 2)]
+    daughter =[]
     for i in range(r):
-        result.append(a[i])
+        daughter.append(a[i])
         copy_b.remove(a[i])
     #print('去掉a中交叉用到的基金，b为',copy_b)
     for i in range(r,int(len(a)/2)):
-        result.append(copy_b[i-r])
+        daughter.append(copy_b[i-r])
     for i in range(int(len(a)/2),int(len(a)/2)+r):
-        result.append(a[i])
+        daughter.append(a[i])
     for i in range(int(len(a)/2)+r,len(a)):
-        result.append(b[i])
+        daughter.append(b[i])
+
+    son = []
+    for i in range(r):
+        son.append(b[i])
+        copy_a.remove(b[i])
+    # print('去掉a中交叉用到的基金，b为',copy_b)
+    for i in range(r, int(len(a) / 2)):
+        son.append(copy_a[i - r])
+    for i in range(int(len(a) / 2), int(len(a) / 2) + r):
+        son.append(b[i])
+    for i in range(int(len(a) / 2) + r, len(a)):
+        son.append(a[i])
     #print('交叉结果',result)
-    return mutation(result)
+    results.append(mutation(son))
+    results.append(mutation(daughter))
+    return results
 
 # Function to carry out the mutation operator
 def mutation(solution):
@@ -293,8 +310,8 @@ def mutation(solution):
 
 
 # main函数开始
-pop_size = 50
-max_gen = 900
+pop_size = 100
+max_gen = 1000
 preferences = [6, 3, 2]
 maxTolerateDelays = [50, 50, 100]
 cycle = [200, 200, 300]
@@ -306,6 +323,8 @@ print('初始化种群为',chromosomes)
 min_x = -55
 max_x = 55
 gen_no = 0
+startTime = time.time()
+print('startIime:',startTime)
 while (gen_no < max_gen):
     # 计算目标函数值
     function1_values = []
@@ -321,28 +340,41 @@ while (gen_no < max_gen):
         # 2 计算公平性
         function2_values.append(function_fair(delayQueue))
         # 3 计算能耗
-        function3_values.append(function_energy_consumption(taskQueue, duration, delayQueue))
+        function3_values.append(function_energy_consumption(chromosome))
     # 快速非支配排序，生成排序列表（列表每一项是相同Rank个体组成的列表）
     non_dominated_sorted_solution = fast_non_dominated_sort(function1_values[:], function2_values[:],
                                                             function3_values[:])
     #print(non_dominated_sorted_solution)
-    print("The best front for Generation number ", gen_no, " is")
+    print("The best front for Generation number ", gen_no, "time:",time.time()-startTime," is")
     for valuez in non_dominated_sorted_solution[0]:
         print((chromosomes[valuez]), end=" ")
     print("\n")
+
     # 对每一层计算拥挤度
     crowding_distance_values = []
     for i in range(0, len(non_dominated_sorted_solution)):  #
         crowding_distance_values.append(
             crowding_distance(function1_values[:], function2_values[:],function3_values[:], non_dominated_sorted_solution[i][:]))
+    total = 0
+    i_above_half = 0
+    for i in range(len(non_dominated_sorted_solution)):
+        total += len(non_dominated_sorted_solution[i])
+        if(total>len(chromosomes)*0.8):
+            i_above_half = i
+            break
 
-    chromosomes2 = chromosomes[:]
+    chromosomes2 = chromosomes[:i_above_half]
     # 随机生成后代（todo:优化选择机制）
-    while (len(chromosomes2) != 2 * pop_size):
+    while (len(chromosomes2) < 2 * pop_size):
         a1 = random.randint(0, pop_size - 1)
         b1 = random.randint(0, pop_size - 1)
         #print(len(chromosomes),a1,b1)
-        chromosomes2.append(crossover(chromosomes[a1], chromosomes[b1]))
+        results = crossover(chromosomes[a1], chromosomes[b1])
+        if((2 * pop_size - len(chromosomes2))%2 == 0):
+            chromosomes2.append(results[0])
+            chromosomes2.append(results[1])
+        else:
+            chromosomes2.append(results[0])
     # 对两代种群计算目标值
     function1_values2 = []
     function2_values2=[]
@@ -357,7 +389,7 @@ while (gen_no < max_gen):
         # 2 计算公平性
         function2_values2.append(function_fair(delayQueue))
         # 3 计算能耗
-        function3_values2.append(function_energy_consumption(taskQueue, duration, delayQueue))
+        function3_values2.append(function_energy_consumption(chromosome))
 
     # 根据目标值，求得非支配层次列表
     non_dominated_sorted_solution2 = fast_non_dominated_sort(function1_values2[:], function2_values2[:], function3_values2[:])

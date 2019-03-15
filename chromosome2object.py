@@ -58,21 +58,21 @@ def function_fair(delayQueue):
 
 
 # 能耗函数
-def function_energy_consumption(taskQueue, duration, delayQueue):
+def function_energy_consumption(chromosome):
     runTime = 0
     sleepTime = 0
-    for e in delayQueue:
-        for ele in e:
-            sleepTime += ele
-    for i in taskQueue:
+    for i in chromosome[int(len(chromosome)/2):len(chromosome)]:
+        sleepTime += i
+    for i in chromosome[0:int(len((chromosome))/2)]:
         runTime += duration[i - 1]
+    print('sleepTime',sleepTime)
+    print('runTime',runTime)
     return sleepTime / (sleepTime + runTime)
 
 
 def chromosome2delayQueueAndTaskQueue(chromosome):
     # 1 根据染色体生成任务开始执行列表
     # 1.1 分割染色体为任务排序队列和任务间隔队列
-    print(chromosome)
     taskTypeNum = int(len(duration))
     taskQueueNum = int(len(chromosome) / 2)
     taskQueue = chromosome[:taskQueueNum]
@@ -84,20 +84,22 @@ def chromosome2delayQueueAndTaskQueue(chromosome):
     taskStartTime = [[] for i in range(taskTypeNum)]  # taskStartTime:[[50, 220, 420], [0, 170, 260], [90, 460]]
     for i in range(taskQueueNum):
         taskType = taskQueue[i]
-        currentTime +=  intervalQueue[i]
+        currentTime += intervalQueue[i]
         taskStartTime[taskType - 1].append(currentTime)
         currentTime += duration[taskType - 1]
-
-    print(u'taskStartTime:{}'.format(taskStartTime))
+    print(chromosome,'的taskStartTime',taskStartTime)
     # 2 calculate delay loss
     # 2.1 calculate Delay between  two scheduling for each task
     #    (delay = actual interval - expect interval)
-    delayQueue = [[] for i in range(taskType)]  # delayQueue:[[0, 0], [0, 0], [70]]
-    for i in range(taskType):
-        for j in range(len(taskStartTime[i]) - 1):
-            actualInterval = taskStartTime[i][j + 1] - taskStartTime[i][j]
-            delay = 0 if actualInterval - cycle[i] < 0 else actualInterval - cycle[i]
-            delayQueue[i].append(delay)
+    delayQueue = [[] for i in range(len(cycle))]  # delayQueue:[[0, 0], [0, 0], [70]]
+    for i in range(len(cycle)):
+        for j in range(len(taskStartTime[i])):
+            if(j == 0):
+                delayQueue[i].append(taskStartTime[i][j])
+            else:
+                actualInterval = taskStartTime[i][j] - taskStartTime[i][j-1]
+                delay = 0 if actualInterval - cycle[i] < 0 else actualInterval - cycle[i]
+                delayQueue[i].append(delay)
     return taskQueue, delayQueue
 
 
@@ -135,21 +137,22 @@ duration = [40, 50, 80]
 
 
 
-chromosomes = initChromosome(cycle,1000)
-taskQueue, delayQueue = chromosome2delayQueueAndTaskQueue(chromosomes[0])
+# chromosomes = initChromosome(cycle,1000)
+# taskQueue, delayQueue = chromosome2delayQueueAndTaskQueue(chromosomes[0])
 
 #taskQueue:  [1, 2, 1, 2, 3, 1, 2, 3]
 #delayQueue:  [[40, 194], [89, 76], [0]]
-taskQueue, delayQueue = chromosome2delayQueueAndTaskQueue([2, 2, 2, 1, 3, 1, 1, 3, 35, 24, 35, 9, 24, 14, 28, 22] )
+chromosome = [1, 2, 1, 1, 2, 3, 2, 3, 42, 96, 46, 47, 48, 78, 22, 48]
+taskQueue, delayQueue = chromosome2delayQueueAndTaskQueue( chromosome)
 print(taskQueue)
-print(delayQueue)
+print('delayQueue',delayQueue)
 # 3 计算延迟损失
 delayLoss = delayQueue2delayLoss(delayQueue)
 # 3 计算公平性
 fair = function_fair(delayQueue)
 
 # 4 计算能耗
-consu = function_energy_consumption(taskQueue, duration, delayQueue)
+consu = function_energy_consumption(chromosome)
 
 print(delayLoss)
 print(fair)
